@@ -10,7 +10,7 @@ import express from "express";
 
 export default (router: express.Router) => {
   router.post("/markAsFavorite", markAsFavorite);
-  router.post("/renameFavoriteItem", protect, renameFavoriteItem);
+  router.post("/renameFavoriteItem/:itemId", protect, renameFavoriteItem);
   router.post("/favorites/:itemId/duplicate", protect, duplicateItem);
   router.get("/getFavoriteItems", protect, getFavoriteItems);
   router.delete("/favorites/:itemId", protect, deleteFavoriteItem);

@@ -225,6 +225,141 @@ const getDocumentsByType = async (req, res) => {
   }
 };
 
+//////////////////////////////////////////////////
+
+const renameItem = async (req, res) => {
+  try {
+    const { newName } = req.body;
+    const { itemId, itemType } = req.params;
+    const userId = req.user._id;
+
+    if (!itemId || !newName || !itemType) {
+      return res
+        .status(400)
+        .json({ error: "Item ID, new name, and type are required." });
+    }
+
+    let updatedItem;
+
+    if (itemType === "file") {
+      updatedItem = await File.findOneAndUpdate(
+        { _id: itemId, user: userId },
+        { name: newName },
+        { new: true }
+      );
+    } else if (itemType === "folder") {
+      updatedItem = await Folder.findOneAndUpdate(
+        { _id: itemId, user: userId },
+        { name: newName },
+        { new: true }
+      );
+    } else {
+      return res.status(400).json({ error: "Invalid item type." });
+    }
+
+    if (!updatedItem) {
+      return res.status(404).json({ error: `${itemType} not found.` });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `${itemType} renamed successfully.`,
+      data: updatedItem,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to rename item." });
+  }
+};
+
+const duplicateItem = async (req, res) => {
+  try {
+    const { itemId, itemType } = req.params;
+    const userId = req.user._id;
+
+    if (!itemId || !itemType) {
+      return res.status(400).json({ error: "Item ID and type are required." });
+    }
+
+    let duplicatedItem;
+
+    if (itemType === "file") {
+      const file = await File.findOne({ _id: itemId, user: userId });
+      if (!file) {
+        return res.status(404).json({ error: "File not found." });
+      }
+
+      duplicatedItem = new File({
+        ...file.toObject(),
+        _id: undefined, // Generate new ID
+        name: `${file.name} (Duplicate)`,
+        createdAt: Date.now(),
+      });
+
+      await duplicatedItem.save();
+    } else if (itemType === "folder") {
+      const folder = await Folder.findOne({ _id: itemId, user: userId });
+      if (!folder) {
+        return res.status(404).json({ error: "Folder not found." });
+      }
+
+      duplicatedItem = new Folder({
+        ...folder.toObject(),
+        _id: undefined, // Generate new ID
+        name: `${folder.name} (Duplicate)`,
+        createdAt: Date.now(),
+      });
+
+      await duplicatedItem.save();
+    } else {
+      return res.status(400).json({ error: "Invalid item type." });
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `${itemType} duplicated successfully.`,
+      data: duplicatedItem,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to duplicate item." });
+  }
+};
+
+const deleteItem = async (req, res) => {
+  try {
+    const { itemId, itemType } = req.params;
+
+    const userId = req.user._id;
+
+    if (!itemId || !itemType) {
+      return res.status(400).json({ error: "Item ID and type are required." });
+    }
+
+    let deletedItem;
+
+    if (itemType === "file") {
+      deletedItem = await File.findOneAndDelete({ _id: itemId, user: userId });
+    } else if (itemType === "folder") {
+      deletedItem = await Folder.findOneAndDelete({
+        _id: itemId,
+        user: userId,
+      });
+    } else {
+      return res.status(400).json({ error: "Invalid item type." });
+    }
+
+    if (!deletedItem) {
+      return res.status(404).json({ error: `${itemType} not found.` });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `${itemType} deleted successfully.`,
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete item." });
+  }
+};
+
 export {
   getStorageSummary,
   createFolder,
@@ -233,4 +368,7 @@ export {
   uploadMultipleFiles,
   getDocumentsByDate,
   getDocumentsByType,
+  renameItem,
+  duplicateItem,
+  deleteItem,
 };

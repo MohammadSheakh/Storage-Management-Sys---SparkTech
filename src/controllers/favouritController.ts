@@ -77,7 +77,8 @@ const getFavoriteItems = async (req, res) => {
 
 const renameFavoriteItem = async (req, res) => {
   try {
-    const { itemId, newName } = req.body;
+    const { newName } = req.body;
+    const { itemId } = req.params;
     const userId = req.user._id;
 
     if (!itemId || !newName) {

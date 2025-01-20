@@ -7,6 +7,9 @@ import {
   getDocumentsByDate,
   getRootLevelItems,
   getDocumentsByType,
+  renameItem,
+  duplicateItem,
+  deleteItem,
 } from "../controllers/storageController";
 import { protect } from "../middlewares/authMiddleware";
 import upload from "../middlewares/multerConfig";
@@ -14,28 +17,33 @@ import upload from "../middlewares/multerConfig";
 export default (router: express.Router) => {
   router.get("/files/type/:type", protect, getDocumentsByType);
 
-  router.get("/getStorageSummary", protect, getStorageSummary); // working
-  router.post("/folder/create", protect, createFolder); // working
+  router.get("/getStorageSummary", protect, getStorageSummary);
 
-  router.get("/getRootLevelItems", protect, getRootLevelItems); // working
+  router.put("/item/rename/:type/:id", protect, renameItem);
+  router.post("/item/duplicate/:type/:itemId", protect, duplicateItem);
+  router.delete("/item/delete/:type/:itemId", protect, deleteItem);
 
-  router.get("/getFolderContents", protect, getFolderContents); // working
+  router.get("/getRootLevelItems", protect, getRootLevelItems);
+
+  router.get("/getFolderContents", protect, getFolderContents);
 
   router.get("/getDocumentsByDate/:date", protect, getDocumentsByDate);
 
   router.post(
-    "/:folderId/uploadMultipleFiles", // working
+    "/:folderId/uploadMultipleFiles",
     protect,
     upload.array("files", 10),
     uploadMultipleFiles
   );
 
   router.post(
-    "/uploadMultipleFiles", // working
+    "/uploadMultipleFiles",
     protect,
     upload.array("files", 10),
     uploadMultipleFiles
   );
+
+  router.post("/folder/create", protect, createFolder);
 
   return router;
 };
